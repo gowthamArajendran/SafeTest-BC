@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="glass-card">
+        <h2>🔍 Blockchain Result Verifier</h2>
+        <form action="/view_result" method="post">
+            <input type="number" name="id" placeholder="Enter Student ID" required><br>
+            <button type="submit" class="main-btn" style="background: #2196f3;">Verify in Ledger</button>
+        </form>
+
+        {% if result %}
+        <div style="margin-top:20px; text-align: left; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px;">
+            <h3 style="color:#4caf50; text-align: center;">✅ Data Verified</h3>
+            <table style="width:100%; border-collapse:collapse; color: white;">
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                    <th style="padding:10px;">Field</th><th style="padding:10px;">Value</th>
+                </tr>
+                <tr><td style="padding:10px;">Student ID</td><td style="padding:10px;">{{ result.id }}</td></tr>
+                <tr><td style="padding:10px;">Full Name</td><td style="padding:10px;">{{ result.name }}</td></tr>
+                <tr><td style="padding:10px;">Final Marks</td><td style="padding:10px; font-weight:bold;">{{ result.marks }} / 100</td></tr>
+            </table>
+        </div>
+        {% endif %}
+        
+        <br><a href="/" class="btn-back">⬅️ Back to Home</a>
+    </div>
+</body>
+</html>

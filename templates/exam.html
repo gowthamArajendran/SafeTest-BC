@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Student Portal</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        .q-block { display: none; text-align: left; transition: 0.3s; }
+        .active-q { display: block; }
+        #timer { font-size: 24px; font-weight: bold; color: #ff5252; margin-bottom: 15px; }
+        .mcq-option { 
+            display: block; 
+            margin: 10px 0; 
+            padding: 12px; 
+            background: rgba(255, 255, 255, 0.05); 
+            border-radius: 10px; 
+            color: white; 
+            cursor: pointer; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .mcq-option:hover { background: rgba(255, 255, 255, 0.1); }
+    </style>
+</head>
+<body>
+    <div class="glass-card" style="max-width: 700px;">
+        {% if not show_questions %}
+            <h2>🎓 Student Login</h2>
+            <form action="/exam" method="post">
+                <input type="number" name="id" placeholder="Student ID" required>
+                <input type="text" name="name" placeholder="Full Name" required>
+                <button type="submit" name="student_submit" class="main-btn" style="background:#4caf50;">Enter Exam</button>
+            </form>
+        {% else %}
+            <div id="timer">⏳ Loading Timer...</div>
+            <h3>📝 Welcome, {{ name }}</h3>
+            <hr style="opacity: 0.2; margin-bottom: 20px;">
+
+            <form id="examForm" action="/exam" method="post">
+                <input type="hidden" name="id" value="{{ id }}">
+                <input type="hidden" name="name" value="{{ name }}">
+                
+                <div id="question-container">
+                    {% for q in questions %}
+                    {% set q_index = loop.index0 %} 
+                    <div class="q-block" id="q-{{ q_index }}">
+                        <p style="color: #ffeb3b;"><b>Question {{ loop.index }} of {{ questions|length }}</b></p>
+                        <p style="font-size: 20px; margin: 15px 0; color: white;">{{ q.q }}</p>
+                        
+                        <div style="margin-top: 15px;">
+                            {% for opt in q.options %}
+                            <label class="mcq-option" style="display: flex; align-items: center; padding: 15px; background: rgba(255,255,255,0.08); margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                                <input type="radio" name="answer_{{ q_index }}" value="{{ ['A','B','C','D'][loop.index0] }}" required style="width: 20px; height: 20px; cursor: pointer;">
+                                <span style="margin-left: 15px; color: white; font-size: 16px;">{{ ['A','B','C','D'][loop.index0] }}) {{ opt }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div style="margin-top: 30px; display: flex; justify-content: space-between;">
+                    <button type="button" id="prevBtn" onclick="changeQ(-1)" class="main-btn" style="background:#607d8b; width: 45%;">⬅️ Previous</button>
+                    <button type="button" id="nextBtn" onclick="changeQ(1)" class="main-btn" style="background:#4caf50; width: 45%;">Next ➡️</button>
+                </div>
+
+                <button type="submit" id="finalSubmit" name="final_submit" class="main-btn" style="background:#2196f3; display:none; margin-top:20px;">Submit Final Exam</button>
+            </form>
+
+            <script>
+                let currentIdx = 0;
+                const totalQs = {{ questions|length }};
+                
+                function showQ(idx) {
+                    document.querySelectorAll('.q-block').forEach(el => el.classList.remove('active-q'));
+                    let target = document.getElementById(`q-${idx}`);
+                    if(target) target.classList.add('active-q');
+                    
+                    document.getElementById('prevBtn').style.visibility = idx === 0 ? 'hidden' : 'visible';
+                    if (idx === totalQs - 1) {
+                        document.getElementById('nextBtn').style.display = 'none';
+                        document.getElementById('finalSubmit').style.display = 'block';
+                    } else {
+                        document.getElementById('nextBtn').style.display = 'block';
+                        document.getElementById('finalSubmit').style.display = 'none';
+                    }
+                }
+                
+                function changeQ(dir) {
+                    currentIdx += dir;
+                    showQ(currentIdx);
+                }
+
+                window.onblur = function() {
+                    alert("⚠️ WARNING: Tab switching detected! This will be reported.");
+                };
+
+                document.addEventListener('contextmenu', event => event.preventDefault()); 
+
+                let duration = {{ duration|default(10) }}; 
+                let seconds = duration * 60;
+                let timerDisplay = document.getElementById('timer');
+
+                let countdown = setInterval(function() {
+                    let mins = Math.floor(seconds / 60);
+                    let secs = seconds % 60;
+                    timerDisplay.innerHTML = `⏳ Time Remaining: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                    
+                    if (seconds <= 0) {
+                        clearInterval(countdown);
+                        alert("Time's up! Submitting exam automatically.");
+                        document.getElementById('examForm').submit();
+                    }
+                    seconds--;
+                }, 1000);
+
+                showQ(0);
+            </script>
+        {% endif %}
+        <br><a href="/" class="btn-back">⬅️ Back to Home</a>
+    </div>
+</body>
+</html>

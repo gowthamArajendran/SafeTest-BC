@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="refresh" content="5;url=/" />
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Processing...</title>
+</head>
+<body>
+    <div class="glass-card">
+        <div style="font-size: 50px; margin-bottom: 20px;">✅</div>
+        <h2>{{ msg }}</h2>
+        
+        <p style="margin-top: 20px; font-size: 18px;">
+            Redirecting to Home in <span id="countdown" style="font-weight: bold; color: #ff9800; font-size: 22px;">5</span> seconds...
+        </p>
+
+        <a href="/" class="btn-back">Go Home Now</a>
+    </div>
+
+    <script>
+        let timeLeft = 5;
+        let countdownElement = document.getElementById('countdown');
+
+        let timer = setInterval(function() {
+            timeLeft -= 1;
+            countdownElement.innerText = timeLeft;
+            
+            if(timeLeft <= 0) {
+                clearInterval(timer);
+            }
+        }, 1000); // 1000ms = 1 second
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff Control Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="glass-card" style="max-width: 650px; width: 95%;">
+        {% if login_mode %}
+            <h2>🔐 Staff Login</h2>
+            <form action="/admin" method="post">
+                <input type="password" name="password" placeholder="Staff Password" required>
+                <button type="submit" class="main-btn" style="background:#ff9800;">Login</button>
+            </form>
+        {% else %}
+            <h2>🛠️ Exam Configurator</h2>
+            
+            <div style="margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+                <label style="display:block; margin-bottom:8px; font-size:14px; color: white;">Set Total Exam Duration (Minutes):</label>
+                <input type="number" id="exam_duration" value="10" min="1" style="width: 100px; text-align: center; color: black; background: white; border-radius: 5px; border: none; padding: 5px;">
+            </div>
+
+            <p style="font-size: 13px; color: #ddd;">Add Multiple Choice Questions (MCQ)</p>
+            
+            <div style="margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; background: rgba(0,0,0,0.2);">
+                <input type="text" id="ques" placeholder="Type Question here..." style="width: 100%; color: white; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="text" id="optA" placeholder="Option A" style="background: rgba(255,255,255,0.1); color: white;">
+                    <input type="text" id="optB" placeholder="Option B" style="background: rgba(255,255,255,0.1); color: white;">
+                    <input type="text" id="optC" placeholder="Option C" style="background: rgba(255,255,255,0.1); color: white;">
+                    <input type="text" id="optD" placeholder="Option D" style="background: rgba(255,255,255,0.1); color: white;">
+                </div>
+
+                <select id="correctAns" style="width: 100%; padding: 12px; margin-top: 10px; border-radius: 10px; background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(5px); cursor: pointer;">
+                    <option value="" disabled selected style="background: #4a148c; color: white;">Select Correct Option</option>
+                    <option value="A" style="background: #4a148c; color: white;">A</option>
+                    <option value="B" style="background: #4a148c; color: white;">B</option>
+                    <option value="C" style="background: #4a148c; color: white;">C</option>
+                    <option value="D" style="background: #4a148c; color: white;">D</option>
+                </select>
+
+                <button type="button" onclick="addToJSON()" class="main-btn" style="background:#4caf50; margin-top: 15px;">➕ Add to Exam List</button>
+            </div>
+
+            <h2 style="margin-top: 25px;">📝 Question Bank Preview</h2>
+            <form action="/admin" method="post">
+                <input type="hidden" name="password" value="staff123">
+                <input type="hidden" id="final_duration" name="duration" value="10">
+                
+                <textarea id="json_box" name="bulk_data" rows="5" readonly required 
+                style="width: 90%; background: rgba(0,0,0,0.3); color: #00ff00; font-family: monospace; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);" 
+                placeholder="JSON will be generated here..."></textarea>
+                
+                <button type="submit" class="main-btn" style="background:orange; font-size: 18px;">🚀 Release & Lock Exam</button>
+            </form>
+        {% endif %}
+
+        <br><a href="/" class="btn-back">⬅️ Back to Home</a>
+    </div>
+
+    <script>
+        let qList = [];
+        function addToJSON() {
+            let q = document.getElementById('ques').value;
+            let oA = document.getElementById('optA').value;
+            let oB = document.getElementById('optB').value;
+            let oC = document.getElementById('optC').value;
+            let oD = document.getElementById('optD').value;
+            let correct = document.getElementById('correctAns').value;
+            let duration = document.getElementById('exam_duration').value;
+            
+            if(q && oA && oB && oC && oD && correct) {
+                // Update the hidden duration field so the value is sent to Flask
+                document.getElementById('final_duration').value = duration;
+                qList.push({
+                    "q": q,
+                    "options": [oA, oB, oC, oD],
+                    "a": correct 
+                });
+                document.getElementById('json_box').value = JSON.stringify(qList, null, 2);
+                // Clear inputs
+                document.getElementById('ques').value = '';
+                document.getElementById('optA').value = '';
+                document.getElementById('optB').value = '';
+                document.getElementById('optC').value = '';
+                document.getElementById('optD').value = '';
+                document.getElementById('correctAns').selectedIndex = 0;
+            } else {
+                alert("Please fill all fields!");
+            }
+        }
+    </script>
+</body>
+</html>
