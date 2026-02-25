@@ -1,34 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="refresh" content="5;url=/" />
-    <link rel="stylesheet" href="/static/style.css">
-    <title>Processing...</title>
+    <title>Exam Status</title>
+    <style>
+        body { 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #1a1a2e; 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            text-align: center; 
+            padding: 40px; 
+            max-width: 450px; 
+            width: 90%; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .status-msg { color: #00ff00; font-size: 18px; margin-bottom: 10px; }
+        
+        .code-display { 
+            background: rgba(255,152,0,0.1); 
+            border: 2px dashed #ff9800; 
+            padding: 15px; 
+            font-size: 28px; 
+            color: #ff9800; 
+            font-weight: bold; 
+            margin: 20px 0;
+            letter-spacing: 5px;
+            border-radius: 10px;
+        }
+        .main-btn { 
+            display: inline-block;
+            width: 100%;
+            padding: 12px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            text-decoration: none;
+            margin: 8px 0;
+            border: none;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .copy-btn { background: #4caf50; color: white; }
+        .back-btn { background: #2196f3; color: white; }
+        .main-btn:hover { opacity: 0.8; transform: translateY(-2px); }
+    </style>
 </head>
 <body>
     <div class="glass-card">
-        <div style="font-size: 50px; margin-bottom: 20px;">✅</div>
-        <h2>{{ msg }}</h2>
+        <h2 style="color: white; margin-top: 0;">✅ Success!</h2>
+        <p class="status-msg">Exam has been released successfully.</p>
         
-        <p style="margin-top: 20px; font-size: 18px;">
-            Redirecting to Home in <span id="countdown" style="font-weight: bold; color: #ff9800; font-size: 22px;">5</span> seconds...
-        </p>
+        <div class="code-display" id="examCodeDisplay">
+            {% set code = msg.split("Code: ")[1] if "Code: " in msg else "ERROR" %}
+            {{ code }}
+        </div>
 
-        <a href="/" class="btn-back">Go Home Now</a>
+        <button class="main-btn copy-btn" onclick="copyCode('{{ code }}')">📋 Copy Exam Code</button>
+
+        <div style="margin-top: 10px;">
+            <a href="/admin" class="main-btn back-btn">⬅️ Done & Back to Admin</a>
+        </div>
     </div>
 
     <script>
-        let timeLeft = 5;
-        let countdownElement = document.getElementById('countdown');
-
-        let timer = setInterval(function() {
-            timeLeft -= 1;
-            countdownElement.innerText = timeLeft;
-            
-            if(timeLeft <= 0) {
-                clearInterval(timer);
+        function copyCode(code) {
+            if(code === "ERROR") {
+                alert("Code not found!");
+                return;
             }
-        }, 1000); // 1000ms = 1 second
+            navigator.clipboard.writeText(code).then(() => {
+                alert("Exam Code Copied: " + code);
+            });
+        }
     </script>
 </body>
 </html>
