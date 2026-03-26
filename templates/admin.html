@@ -6,147 +6,141 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         body { 
-        height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; 
-        background: #1a1a2e; overflow: hidden; 
-    }
-    .glass-card { 
-        max-width: 580px; width: 90%; max-height: 96vh; /* Card height-a konjam kurachuttaen */
-        padding: 10px 15px; display: flex; flex-direction: column; gap: 3px; /* Gap-a kurachuttaen */
-    }
-    /* FIX: Bottom link position */
-    .home-link { 
-        text-align: center; font-size: 11px; color: #ccc; 
-        text-decoration: none; margin-top: auto; padding-top: 5px; 
-    }
-        /* Screen height-kku thagundha maari fixed layout */
-        body { 
-            height: 100vh; 
-            margin: 0; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #1a1a2e;
-            overflow: hidden; 
+            min-height: 100vh; margin: 0; padding: 20px 0; display: flex; align-items: center; justify-content: center; 
+            background: #1a1a2e; overflow-y: auto; font-family: 'Segoe UI', sans-serif; box-sizing: border-box;
         }
-
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .glass-card { 
-            max-width: 580px; 
-            width: 90%; 
-            height: auto; 
-            max-height: 98vh; 
-            padding: 10px 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            max-width: 420px; width: 92%; height: auto; max-height: 98vh; 
+            padding: 10px 15px; display: flex; flex-direction: column; gap: 5px; 
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px);
+            border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.4s ease-out; transition: all 0.3s ease-in-out;
         }
-
-        /* FIX: Placeholder visibility and Type color */
-        input::placeholder { 
-            color: rgba(255, 255, 255, 0.9) !important; 
-            opacity: 1; 
-        }
-
         input, select, textarea {
-            font-size: 12px !important;
-            padding: 5px !important;
-            background: rgba(255, 255, 255, 0.15);
-            color: white !important;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            outline: none;
+            font-size: 13px !important; padding: 6px !important; background: rgba(255, 255, 255, 0.1);
+            color: white !important; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; outline: none;
         }
-
-        /* Dropdown Visibility Fix */
-        select option { color: black !important; background: white !important; }
-
-        h2 { margin: 0; font-size: 18px; text-align: center; color: white; }
+        select option { color: black !important; }
+        h2 { margin: 0; font-size: 17px; text-align: center; color: white; }
+        .main-btn { border: none; cursor: pointer; border-radius: 8px; font-weight: bold; color: white; transition: 0.3s; box-sizing: border-box; text-align: center; }
+        .main-btn:hover { opacity: 0.9; transform: scale(1.02); }
         
-        .final-submit-box {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 4px;
-            margin-top: 2px;
+        .q-nav-box { 
+            background: rgba(0,0,0,0.3); padding: 6px; border-radius: 10px; 
+            border: 1px solid rgba(255,255,255,0.1);
         }
-
-        .main-btn {
-            border: none;
-            cursor: pointer;
-            transition: 0.3s;
-            border-radius: 8px;
-            font-weight: bold;
-            color: white;
-        }
-        .main-btn:hover { opacity: 0.8; }
+        .nav-controls { display: flex; gap: 4px; margin-top: 4px; }
     </style>
 </head>
 <body>
     <div class="glass-card">
-        <a href="/" class="home-link">⬅️ Back to Home</a>
-    </div>
-    <div class="glass-card">
+        {% if error %}<div style="color: #f44336; padding: 5px; text-align: center; font-size: 13px; font-weight: bold;">{{ error }}</div>{% endif %}
         {% if login_mode %}
             <h2>🔐 Staff Login</h2>
-            <form action="/admin" method="post" style="display: flex; flex-direction: column; gap: 8px;">
-                <input type="password" name="password" placeholder="Enter Staff Password" required>
-                <button type="submit" class="main-btn" style="background:#ff9800; padding: 10px;">Login</button>
+            <form action="/admin" method="post" style="display: flex; flex-direction: column; gap: 10px;">
+                <input type="password" name="password" placeholder="Staff Password" required>
+                <button type="submit" class="main-btn" style="background: orange; padding: 12px;">Login</button>
             </form>
         {% else %}
             <h2>🛠️ Exam Configurator</h2>
             
-            <div style="background: rgba(76, 175, 80, 0.15); padding: 5px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid rgba(76, 175, 80, 0.3);">
-                <label style="font-size: 12px; color: white;">⏲️ Duration:</label>
-                <input type="number" id="exam_duration" value="10" style="width: 45px; text-align: center;">
-                <span style="color:white; font-size: 11px;">Mins</span>
+            <div style="background: rgba(76, 175, 80, 0.1); padding: 5px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <input type="text" id="subject_name" placeholder="Exam Type/Subject (ex: Midterm)" style="flex: 1;">
+                <label style="font-size: 11px; color: #4caf50;">⏲️ Mins:</label>
+                <input type="number" id="exam_duration" value="10" style="width: 40px; text-align: center; padding: 2px !important;">
             </div>
 
-            <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: 10px; display: flex; flex-direction: column; gap: 3px;">
                 <input type="text" id="ques" placeholder="Type Question here...">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                    <input type="text" id="optA" placeholder="Option A"><input type="text" id="optB" placeholder="Option B">
-                    <input type="text" id="optC" placeholder="Option C"><input type="text" id="optD" placeholder="Option D">
+                    <input type="text" id="optA" placeholder="A"><input type="text" id="optB" placeholder="B">
+                    <input type="text" id="optC" placeholder="C"><input type="text" id="optD" placeholder="D">
                 </div>
                 <select id="correctAns">
-                    <option value="" disabled selected>Select Correct Option</option>
-                    <option value="A">A</option><option value="B">B</option>
-                    <option value="C">C</option><option value="D">D</option>
+                    <option value="" disabled selected>Correct Ans</option>
+                    <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
                 </select>
-                <button type="button" onclick="addToJSON()" class="main-btn" style="background:#4caf50; padding: 6px !important;">➕ Add to List</button>
+                <button type="button" onclick="addToJSON()" class="main-btn" style="background: #4caf50; padding: 7px;">➕ Add Question</button>
             </div>
 
-            <div class="final-submit-box">
-                <form action="/admin" method="post" style="display:flex; flex-direction:column; gap: 4px;">
-                    <input type="hidden" name="password" value="staff123">
-                    <input type="hidden" id="final_duration" name="duration" value="10">
-                    <textarea id="json_box" name="bulk_data" readonly required style="height: 40px; color: #00ff00; font-size: 10px !important;" placeholder="JSON Preview..."></textarea>
-                    
-                    <button type="submit" class="main-btn" style="background:orange; padding: 10px !important; font-size: 14px !important;">🚀 Release Exam & Generate Code</button>
-                </form>
+            <div class="q-nav-box">
+                <p id="preview_text" style="color: #00ff00; font-size: 11px; margin: 0; white-space: pre-wrap;">No questions added.</p>
+                <div class="nav-controls">
+                    <button type="button" onclick="navQ(-1)" class="main-btn" style="background: #555; font-size: 10px; flex: 1; padding: 5px;">⬅️ Prev</button>
+                    <button type="button" onclick="deleteThisQ()" class="main-btn" style="background: #f44336; font-size: 10px; flex: 1; padding: 5px;">🗑️ Delete</button>
+                    <button type="button" onclick="navQ(1)" class="main-btn" style="background: #555; font-size: 10px; flex: 1; padding: 5px;">Next ➡️</button>
+                </div>
             </div>
+
+            <form action="/admin" method="post" style="display:flex; flex-direction:column; gap: 3px;" onsubmit="return validateSubject()">
+                <input type="hidden" name="password" value="staff123">
+                <input type="hidden" id="final_duration" name="duration" value="10">
+                <textarea id="json_box" name="bulk_data" readonly required style="display: none;"></textarea>
+                <button type="submit" class="main-btn" style="background: linear-gradient(135deg, #ff9800, #f57c00); padding: 10px; font-size: 14px;">🚀 Release Exam & Get Code</button>
+            </form>
+            <a href="/view_result" class="main-btn" style="background: #2196f3; padding: 10px; font-size: 14px; margin-top: 5px; text-decoration: none;">🔍 Verify Student Results</a>
         {% endif %}
-
-        <a href="/" style="text-align: center; font-size: 11px; color: #ccc; text-decoration: none; margin-top: 5px;">⬅️ Back to Home</a>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <a href="/" class="main-btn" style="background: #607d8b; flex: 1; text-decoration: none; padding: 10px; font-size: 14px;">⬅️ Home</a>
+            {% if not login_mode %}
+            <form action="/admin" method="post" style="flex: 1;">
+                <input type="hidden" name="logout" value="1">
+                <button type="submit" class="main-btn" style="background: #f44336; width: 100%; padding: 10px; font-size: 14px;">🚪 Logout</button>
+            </form>
+            {% endif %}
+        </div>
     </div>
 
     <script>
-        let qList = [];
+        let qList = []; let curIdx = 0;
         function addToJSON() {
             let q = document.getElementById('ques').value;
-            let oA = document.getElementById('optA').value;
-            let oB = document.getElementById('optB').value;
-            let oC = document.getElementById('optC').value;
-            let oD = document.getElementById('optD').value;
-            let correct = document.getElementById('correctAns').value;
+            let a = document.getElementById('optA').value; let b = document.getElementById('optB').value;
+            let c = document.getElementById('optC').value; let d = document.getElementById('optD').value;
+            let cor = document.getElementById('correctAns').value;
+            if(q && a && b && c && d && cor) {
+                qList.push({ "q": q, "options": [a, b, c, d], "a": cor });
+                curIdx = qList.length - 1; updateUI(); clearInputs();
+            } else { alert("Fill all fields!"); }
+        }
+        function deleteThisQ() {
+            if (qList.length > 0) {
+                qList.splice(curIdx, 1);
+                if (curIdx >= qList.length) curIdx = qList.length - 1;
+                updateUI();
+            }
+        }
+        function navQ(step) {
+            let nIdx = curIdx + step;
+            if (nIdx >= 0 && nIdx < qList.length) { curIdx = nIdx; updateUI(); }
+        }
+        function validateSubject() {
+            let subj = document.getElementById('subject_name').value;
+            if(!subj) { alert("Please enter the Exam Type/Subject!"); return false; }
+            if(qList.length === 0) { alert("Please add at least 1 question!"); return false; }
+            updateUI();
+            return true;
+        }
+        function updateUI() {
+            let p = document.getElementById('preview_text');
+            if (qList.length > 0) {
+                let d = qList[curIdx];
+                p.innerHTML = `<b>Q${curIdx + 1}/${qList.length}:</b> ${d.q}
+A) ${d.options[0]}  B) ${d.options[1]}
+C) ${d.options[2]}  D) ${d.options[3]}
+<i>Ans: ${d.a}</i>`;
+            } else { p.innerHTML = "No questions added."; }
             
-            if(q && oA && oB && oC && oD && correct) {
-                qList.push({ "q": q, "options": [oA, oB, oC, oD], "a": correct });
-                document.getElementById('json_box').value = JSON.stringify(qList, null, 2);
-                document.getElementById('final_duration').value = document.getElementById('exam_duration').value;
-                
-                // AUTO RESET FIELDS
-                document.getElementById('ques').value = '';
-                document.getElementById('optA').value = ''; document.getElementById('optB').value = '';
-                document.getElementById('optC').value = ''; document.getElementById('optD').value = '';
-                document.getElementById('correctAns').selectedIndex = 0;
-            } else { alert("Please fill all fields!"); }
+            let subj = document.getElementById('subject_name') ? document.getElementById('subject_name').value : "General Exam";
+            let finalPayload = { subject: subj, questions: qList };
+            document.getElementById('json_box').value = JSON.stringify(finalPayload);
+            document.getElementById('final_duration').value = document.getElementById('exam_duration') ? document.getElementById('exam_duration').value : 10;
+        }
+        function clearInputs() {
+            document.getElementById('ques').value = ''; document.getElementById('optA').value = '';
+            document.getElementById('optB').value = ''; document.getElementById('optC').value = '';
+            document.getElementById('optD').value = ''; document.getElementById('correctAns').selectedIndex = 0;
         }
     </script>
 </body>

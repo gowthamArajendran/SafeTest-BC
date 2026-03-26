@@ -5,15 +5,19 @@
     <title>Blockchain Result Verifier</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         /* Screen height-kku thagundha maari fixed layout */
         body { 
-            height: 100vh; 
+            min-height: 100vh; 
             margin: 0; 
+            padding: 20px 0;
             display: flex; 
             align-items: center; 
             justify-content: center; 
             background: #1a1a2e;
-            overflow: hidden; 
+            overflow-y: auto; 
+            font-family: sans-serif;
+            box-sizing: border-box;
         }
 
         .glass-card { 
@@ -25,6 +29,12 @@
             flex-direction: column;
             text-align: center;
             box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.4s ease-out;
+            transition: all 0.3s ease-in-out;
         }
 
         /* FIX: Placeholder & Input Visibility */
@@ -56,9 +66,12 @@
             background: #2196f3; 
             color: white;
             transition: 0.3s;
+            box-sizing: border-box;
+            text-align: center;
+            display: block;
         }
 
-        .main-btn:hover { opacity: 0.9; }
+        .main-btn:hover { opacity: 0.9; transform: scale(1.02); }
 
         .result-box {
             margin-top: 20px; 
@@ -69,13 +82,6 @@
             color: white;
         }
 
-        .home-link { 
-            text-align: center; 
-            margin-top: 20px; 
-            color: #ccc; 
-            text-decoration: none; 
-            font-size: 13px;
-        }
     </style>
 </head>
 <body>
@@ -97,7 +103,11 @@
             </div>
         {% endif %}
 
-        <a href="/" class="home-link">⬅️ Back to Home</a>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <a href="/" class="main-btn" style="background: #607d8b; flex: 1; text-decoration: none;">⬅️ Home</a>
+            {% if session.get('admin_logged_in') %}
+            <a href="/admin" class="main-btn" style="background: #ff9800; flex: 1; text-decoration: none;">🛠️ Admin</a>
+            {% endif %}
+        </div>
     </div>
 </body>
-</html>

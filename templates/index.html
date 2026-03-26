@@ -6,19 +6,29 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         body { 
-            overflow: hidden; height: 100vh; margin: 0; 
+            min-height: 100vh; margin: 0; padding: 20px 0; box-sizing: border-box;
             display: flex; align-items: center; justify-content: center; 
-            background: #1a1a2e; 
+            background: #1a1a2e; font-family: sans-serif;
+            overflow-y: auto;
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .glass-card { 
             max-width: 480px; width: 90%; padding: 25px; 
             text-align: center; color: white;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.4s ease-out;
+            transition: all 0.3s ease-in-out;
         }
         .nav-box { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
         .main-btn { 
-            padding: 14px; border-radius: 10px; text-decoration: none; 
+            padding: 14px; border-radius: 10px; text-decoration: none; display: block;
             color: white; font-weight: bold; cursor: pointer; border: none; font-size: 16px; 
+            transition: 0.3s; box-sizing: border-box; width: 100%;
         }
+        .main-btn:hover { opacity: 0.9; transform: scale(1.02); }
         #studentForm { 
             display: none; margin-top: 15px; background: rgba(0,0,0,0.3); 
             padding: 15px; border-radius: 12px; 
@@ -36,23 +46,27 @@
         <p style="color: #ddd;">Secure Blockchain Examination System</p>
         
         <div class="nav-box">
-            <a href="/admin" class="main-btn" style="background: #ff9800;">🛠️ Staff Dashboard</a>
+            <!-- 1. Staff / Admin Options -->
+            <a href="/admin" class="main-btn" style="background: #ff9800; font-size: 18px;">🛠️ Staff / Admin Portal</a>
             
-            <button onclick="toggleForm()" class="main-btn" style="background: #4caf50;">👨‍🎓 Start Student Exam</button>
+            <!-- 2. Student Options -->
+            <button onclick="toggleForm()" class="main-btn" style="background: #4caf50; font-size: 18px;">👨‍🎓 Student Portal</button>
             
             <div id="studentForm">
+                <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #ffeb3b;">📝 Write Exam</h3>
                 <form action="/exam" method="post">
                     <input type="number" name="id" placeholder="Student ID" required>
                     <input type="text" name="name" placeholder="Full Name" required>
                     <input type="text" name="exam_code" placeholder="6-Digit Exam Code" required 
                            style="border: 2px solid #ff9800; text-transform: uppercase;">
-                    <button type="submit" name="student_submit" class="main-btn" style="background: #4caf50; width: 100%;">
+                    <button type="submit" name="student_submit" class="main-btn" style="background: #4caf50; width: 100%; margin-bottom: 10px;">
                         Verify & Start
                     </button>
                 </form>
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+                <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #2196f3;">📊 Check Marks</h3>
+                <a href="/view_result" class="main-btn" style="background: #2196f3;">🔍 View My Result</a>
             </div>
-            
-            <a href="/view_result" class="main-btn" style="background: #2196f3;">🔍 Verify Results</a>
         </div>
     </div>
 
