@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Dashboard - Examination Hub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        let liveQuestions = [];
+        let curCode = "";
+        let answers = []; 
+
+        function hideAllPanels() {
+            document.getElementById('menu-panel').style.display = 'none';
+            document.getElementById('code-entry-panel').style.display = 'none';
+            document.getElementById('exam-taking-panel').style.display = 'none';
+            document.getElementById('blockchain-success-panel').style.display = 'none';
+            document.getElementById('review-code-entry-panel').style.display = 'none';
+            document.getElementById('review-panel').style.display = 'none';
+        }
+
+        // --- TAKING EXAMS FLOW ---
+        function showTakeExamEntry() {
+            hideAllPanels();
+            document.getElementById('code-entry-panel').style.display = 'block';
+        }
+
+        function findExam() {
+            const code = document.getElementById('student_code').value.trim();
+            if(!code) return alert("Please enter exam code!");
+
+            fetch('/get_exam/' + code)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    curCode = code;
+                    liveQuestions = data.questions;
+                    hideAllPanels();
+                    document.getElementById('exam-taking-panel').style.display = 'block';
+                    document.getElementById('exam_heading').innerText = data.subject + " Exam Record"; 
+                    renderQuestions();
+                } else {
+                    document.getElementById('error-box').innerHTML = data.message;
+                    document.getElementById('error-box').style.display = 'block';
+                }
+            });
+        }
+
+        function renderQuestions() {
+            let html = "";
+            liveQuestions.forEach((q, index) => {
+                html += `
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <h3 style="margin-top:0; margin-bottom: 1.5rem; color: #f8fafc; font-weight: 600;">Question ${index + 1}: ${q.question_text}</h3>
+                    <label class="radio-label">
+                        <input type="radio" name="ans_${q.id}" value="Option A" />
+                        <span style="font-size: 1.05rem;">A) ${q.opt_a}</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="ans_${q.id}" value="Option B" />
+                        <span style="font-size: 1.05rem;">B) ${q.opt_b}</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="ans_${q.id}" value="Option C" />
+                        <span style="font-size: 1.05rem;">C) ${q.opt_c}</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="ans_${q.id}" value="Option D" />
+                        <span style="font-size: 1.05rem;">D) ${q.opt_d}</span>
+                    </label>
+                </div>`;
+            });
+            document.getElementById('questions_container').innerHTML = html;
+        }
+
+        function submitStudentExam() {
+            answers = [];
+            let allAnswered = true;
+            for(let q of liveQuestions) {
+                let radios = document.getElementsByName('ans_' + q.id);
+                let selected = null;
+                for(let r of radios) {
+                    if (r.checked) selected = r.value;
+                }
+                
+                if(!selected) {
+                    allAnswered = false;
+                } else {
+                    answers.push({id: q.id, answer: selected});
+                }
+            }
+            
+            if(!allAnswered && !confirm("You have unanswered questions. Are you sure you want to submit?")) {
+                return;
+            }
+            
+            fetch('/submit_exam', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ exam_code: curCode, answers: answers })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert(data.message);
+                    hideAllPanels();
+                    document.getElementById('blockchain-success-panel').style.display = 'block';
+                    document.getElementById('final_marks').innerText = data.marks + '%';
+                } else {
+                    alert("Error: " + data.message);
+                }
+            });
+        }
+
+        // --- REVIEWING RESULTS FLOW ---
+        function showReviewEntry() {
+            hideAllPanels();
+            document.getElementById('review-code-entry-panel').style.display = 'block';
+        }
+        
+        function reviewExamFromSuccess() {
+            fetchReview(curCode);
+        }
+
+        function fetchReview(code) {
+            let targetCode = code || document.getElementById('review_code').value.trim();
+            if(!targetCode) return alert("Please enter exam code to review!");
+
+            fetch('/get_review/' + targetCode)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    hideAllPanels();
+                    document.getElementById('review-panel').style.display = 'block';
+                    document.getElementById('review_heading').innerText = "Feedback for: " + data.subject;
+                    renderReview(data.review_data);
+                } else {
+                    alert("Review Access Denied: " + data.message);
+                }
+            });
+        }
+
+        function renderReview(reviewData) {
+            let html = "";
+            reviewData.forEach((q, index) => {
+                let borderColor = q.is_correct ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)";
+                let bgBadge = q.is_correct ? "<span style='background: var(--success); color:#fff; padding: 2px 8px; border-radius: 4px;'>Correct</span>" : "<span style='background: var(--danger); color:#fff; padding: 2px 8px; border-radius: 4px;'>Wrong</span>";
+                
+                html += `
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; border: 2px solid ${borderColor};">
+                    <h3 style="margin-top:0; margin-bottom: 1.5rem; color: #f8fafc; font-weight: 600;">Q${index + 1}: ${q.question_text} ${bgBadge}</h3>
+                    
+                    <ul style="list-style: none; padding: 0; margin-bottom: 1.5rem;">
+                        <li style="padding: 5px 0;">A) ${q.opt_a}</li>
+                        <li style="padding: 5px 0;">B) ${q.opt_b}</li>
+                        <li style="padding: 5px 0;">C) ${q.opt_c}</li>
+                        <li style="padding: 5px 0;">D) ${q.opt_d}</li>
+                    </ul>
+                    
+                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px;">
+                        <p style="margin: 0 0 10px 0; color: #cbd5e1;"><strong>Your Answer:</strong> <span style="color: ${q.is_correct ? '#34d399' : '#f87171'}">${q.selected}</span></p>
+                        <p style="margin: 0; color: #cbd5e1;"><strong>Actual Correct Answer:</strong> <span style="color: #34d399;">${q.correct_opt}</span></p>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('review_container').innerHTML = html;
+        }
+    </script>
+</head>
+<body>
+    <nav class="navbar glass-nav">
+        <div class="nav-brand">Student Examination Hub</div>
+        <div>
+            <a href="/" class="btn outline-btn" style="margin-right: 10px;">Back to Home (Logout Session)</a>
+        </div>
+    </nav>
+
+    <!-- INITIAL MENU -->
+    <div class="glass-panel main-container slide-up" id="menu-panel" style="text-align: center;">
+        <h2>Welcome to Student Hub</h2>
+        <p class="subtitle">Choose an option below</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 300px; margin: 0 auto;">
+            <button class="btn primary-btn" onclick="showTakeExamEntry()">1. Enter New Exam</button>
+            <button class="btn outline-btn" onclick="showReviewEntry()">2. Show Exam Result Feedback</button>
+        </div>
+    </div>
+
+    <!-- CODE ENTRY FOR TAKING EXAM -->
+    <div class="glass-panel main-container slide-up" id="code-entry-panel" style="display:none;">
+        <h2>Verify Exam Code</h2>
+        <p class="subtitle">Enter the Exam Code created by your Admin dynamically</p>
+        
+        <div class="alert alert-danger" id="error-box" style="display:none;"></div>
+
+        <div class="input-group">
+            <label>Secret Code</label>
+            <input type="text" id="student_code" placeholder="Enter XXXXXX here">
+        </div>
+        <button class="btn primary-btn" onclick="findExam()">Access Question Paper</button>
+        <button class="btn outline-btn" style="width: 100%; margin-top: 10px;" onclick="location.reload()">Back to Menu</button>
+    </div>
+
+    <!-- CODE ENTRY FOR REVIEW -->
+    <div class="glass-panel main-container slide-up" id="review-code-entry-panel" style="display:none;">
+        <h2>Verify Exam Code for Review</h2>
+        <p class="subtitle">Enter an Exam Code you have already submitted</p>
+        
+        <div class="input-group">
+            <label>Exam Code</label>
+            <input type="text" id="review_code" placeholder="Enter XXXXXX here">
+        </div>
+        <button class="btn primary-btn" onclick="fetchReview()">Load Insights</button>
+        <button class="btn outline-btn" style="width: 100%; margin-top: 10px;" onclick="location.reload()">Back to Menu</button>
+    </div>
+
+    <!-- ACTUAL EXAM TAKING PANEL -->
+    <div class="glass-panel main-container fade-in" id="exam-taking-panel" style="display:none; max-width: 800px;">
+        <h2 id="exam_heading" style="color: var(--primary);">Loading Type...</h2>
+        <p class="subtitle">Complete your Exam. Marks will be committed to Blockchain via Smart Contract instantly.</p>
+        
+        <div id="questions_container"></div>
+        
+        <button class="btn primary-btn" style="width: 100%; background: var(--success);" onclick="submitStudentExam()">Submit All Answers to Blockchain</button>
+    </div>
+
+    <!-- FINAL STATE / BLOCKCHAIN SUCCESS -->
+    <div class="glass-panel main-container fade-in" id="blockchain-success-panel" style="display: none; text-align: center;">
+        <h2 style="color: var(--success); font-size: 2rem;">Result Stored Assuredly!</h2>
+        <p class="subtitle">Your Blockchain Transaction Completed Immutable Addition</p>
+        <h1>Score Registered: <span id="final_marks" style="color: #a78bfa;"></span></h1>
+        
+        <button class="btn primary-btn" style="width: 100%; margin-top: 1rem;" onclick="reviewExamFromSuccess()">Review Correct and Wrong Answers Now</button>
+        <a href="/" class="btn outline-btn" style="display: block; width: 100%; box-sizing: border-box; margin-top: 1rem;">Back to Home (Logout Session)</a>
+    </div>
+
+    <!-- REVIEW FEEDBACK PANEL -->
+    <div class="glass-panel main-container fade-in" id="review-panel" style="display:none; max-width: 800px;">
+        <h2 id="review_heading" style="color: var(--primary);">Feedback</h2>
+        <p class="subtitle">Detailed overview of correct and incorrect choices.</p>
+        
+        <div id="review_container"></div>
+        
+        <button class="btn outline-btn" style="width: 100%; margin-top: 10px;" onclick="location.reload()">Back to Main Menu</button>
+    </div>
+</body>
+</html>

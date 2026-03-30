@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Exam System - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+</head>
+<body>
+    <div class="glass-panel login-container fade-in">
+        <h1>Secure Exam Portal</h1>
+        <p class="subtitle">Blockchain-Based Examination Management</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="/login" method="POST">
+            <div class="input-group">
+                <label for="role">Select Login Mode</label>
+                <select name="role" id="role" onchange="toggleForm()">
+                    <option value="student">Student Profile</option>
+                    <option value="admin">Administrator Staff</option>
+                </select>
+            </div>
+
+            <!-- Student Specific Fields -->
+            <div id="student-fields">
+                <div class="input-group">
+                    <label for="student_name">Student Name</label>
+                    <input type="text" id="student_name" name="student_name" placeholder="E.g., John Doe">
+                </div>
+                <div class="input-group">
+                    <label for="student_id">Student ID</label>
+                    <input type="text" id="student_id" name="student_id" placeholder="E.g., STU001">
+                </div>
+            </div>
+
+            <!-- Admin Specific Fields -->
+            <div id="admin-fields" style="display: none;">
+                <div class="input-group">
+                    <label for="admin_id">Admin Staff ID</label>
+                    <input type="text" id="admin_id" name="admin_id" placeholder="Enter Admin Username" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label for="password">Staff Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter Admin Password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn primary-btn">Login to Portal</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleForm() {
+            var role = document.getElementById('role').value;
+            var stdFields = document.getElementById('student-fields');
+            var admFields = document.getElementById('admin-fields');
+            
+            if(role === 'admin') {
+                stdFields.style.display = 'none';
+                document.getElementById('student_name').required = false;
+                document.getElementById('student_id').required = false;
+                
+                admFields.style.display = 'block';
+                document.getElementById('admin_id').required = true;
+                document.getElementById('password').required = true;
+            } else {
+                admFields.style.display = 'none';
+                document.getElementById('admin_id').required = false;
+                document.getElementById('password').required = false;
+                
+                stdFields.style.display = 'block';
+                document.getElementById('student_name').required = true;
+                document.getElementById('student_id').required = true;
+            }
+        }
+        
+        // Initialize state on load
+        window.onload = toggleForm;
+    </script>
+</body>
+</html>

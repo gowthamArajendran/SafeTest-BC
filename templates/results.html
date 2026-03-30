@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Student Exam Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar glass-nav">
+        <div class="nav-brand">Admin Results Dashboard</div>
+        <div>
+            <a href="/admin" class="btn outline-btn" style="margin-right: 10px;">Back to Dashboard</a>
+            <a href="/logout" class="btn outline-btn">Logout</a>
+        </div>
+    </nav>
+    <div class="glass-panel main-container slide-up" style="max-width: 900px;">
+        <h2>Immutable Blockchain Student Records</h2>
+        <p class="subtitle">Fetching verified exam marks stored securely on Ethereum.</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1.5rem; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                    <th style="padding: 10px;">Student ID</th>
+                    <th style="padding: 10px;">Name</th>
+                    <th style="padding: 10px;">Exam Code</th>
+                    <th style="padding: 10px;">Subject Name</th>
+                    <th style="padding: 10px;">Secured (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if results|length == 0 %}
+                <tr><td colspan="5" style="text-align:center; padding: 20px;">No Results Found.</td></tr>
+                {% else %}
+                    {% for r in results %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 10px;">{{ r.studentID }}</td>
+                        <td style="padding: 10px;">{{ r.studentName }}</td>
+                        <td style="padding: 10px; color: var(--primary);">{{ r.examCode }}</td>
+                        <td style="padding: 10px;">{{ r.subject }}</td>
+                        <td style="padding: 10px; font-weight: bold;" class="highlight">{{ r.marks }}%</td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

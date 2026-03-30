@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar glass-nav">
+        <div class="nav-brand">Admin Control Panel</div>
+        <div>
+            <a href="/" class="btn outline-btn" style="margin-right: 10px;">Back to Home</a>
+            <a href="/logout" class="btn outline-btn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="glass-panel main-container slide-up">
+        <h2>Dashboard Options</h2>
+        <p class="subtitle">Manage Exams and View Student Scores</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <a href="/configurator" class="btn primary-btn">+ Create Exam Configurator</a>
+            <a href="/view_results" class="btn outline-btn">View Immutable Student Results</a>
+        </div>
+    </div>
+</body>
+</html>

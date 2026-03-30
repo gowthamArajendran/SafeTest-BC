@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Configurator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        let questions = [];
+        let currentIndex = -1;
+        let isJsonMode = false;
+
+        function renderForm() {
+            if (currentIndex === -1 && questions.length > 0) {
+                currentIndex = 0;
+            }
+            
+            const numEl = document.getElementById('q_num');
+            if(currentIndex >= 0 && currentIndex < questions.length) {
+                numEl.innerText = 'Question ' + (currentIndex + 1) + ' of ' + questions.length;
+                let q = questions[currentIndex];
+                document.getElementById('q_text').value = q.q_text || '';
+                document.getElementById('opt_a').value = q.opt_a || '';
+                document.getElementById('opt_b').value = q.opt_b || '';
+                document.getElementById('opt_c').value = q.opt_c || '';
+                document.getElementById('opt_d').value = q.opt_d || '';
+                document.getElementById('correct_opt').value = q.correct_opt || 'Option A';
+            } else {
+                numEl.innerText = questions.length > 0 ? ('New Question ' + (questions.length + 1)) : 'Question 1';
+                document.getElementById('q_text').value = '';
+                document.getElementById('opt_a').value = '';
+                document.getElementById('opt_b').value = '';
+                document.getElementById('opt_c').value = '';
+                document.getElementById('opt_d').value = '';
+                document.getElementById('correct_opt').value = 'Option A';
+            }
+        }
+
+        function toggleJSON() {
+            isJsonMode = !isJsonMode;
+            if(isJsonMode) {
+                document.getElementById('manual-mode').style.display = 'none';
+                document.getElementById('json-mode').style.display = 'block';
+                document.getElementById('toggle_btn').innerText = "Normal Question Type";
+            } else {
+                document.getElementById('json-mode').style.display = 'none';
+                document.getElementById('manual-mode').style.display = 'block';
+                document.getElementById('toggle_btn').innerText = "JSON Type Question";
+            }
+        }
+
+        function releaseExamFromJSON() {
+            let val = document.getElementById('json_input').value.trim();
+            if(!val) return alert("Please paste the JSON text first.");
+            
+            try {
+                let parsed = JSON.parse(val);
+                if(!Array.isArray(parsed)) throw new Error("JSON must be an array [] containing question objects.");
+                questions = questions.concat(parsed);
+                // After parsing, instantly release it!
+                releaseExam();
+            } catch(e) {
+                alert("Invalid JSON format: " + e.message);
+            }
+        }
+
+        function saveCurrent() {
+            if(isJsonMode) return true; 
+            
+            let q = {
+                q_text: document.getElementById('q_text').value.trim(),
+                opt_a: document.getElementById('opt_a').value.trim(),
+                opt_b: document.getElementById('opt_b').value.trim(),
+                opt_c: document.getElementById('opt_c').value.trim(),
+                opt_d: document.getElementById('opt_d').value.trim(),
+                correct_opt: document.getElementById('correct_opt').value
+            };
+            if(!q.q_text) return false;
+            
+            if (currentIndex >= 0 && currentIndex < questions.length) {
+                questions[currentIndex] = q;
+            } else {
+                questions.push(q);
+                currentIndex = questions.length - 1;
+            }
+            return true;
+        }
+
+        function nextQ() {
+            if(document.getElementById('q_text').value.trim()) {
+                saveCurrent();
+            }
+            currentIndex++;
+            renderForm();
+        }
+
+        function prevQ() {
+            if(currentIndex > 0) {
+                if(document.getElementById('q_text').value.trim()) {
+                    saveCurrent();
+                }
+                currentIndex--;
+                renderForm();
+            } else {
+                alert("This is already the first question!");
+            }
+        }
+
+        function deleteQ() {
+            if(currentIndex >= 0 && currentIndex < questions.length) {
+                questions.splice(currentIndex, 1);
+                if(currentIndex >= questions.length) {
+                    currentIndex = questions.length - 1;
+                }
+                document.getElementById('q_text').value = '';
+                renderForm();
+            } else {
+                document.getElementById('q_text').value = '';
+                document.getElementById('opt_a').value = '';
+                document.getElementById('opt_b').value = '';
+                document.getElementById('opt_c').value = '';
+                document.getElementById('opt_d').value = '';
+            }
+        }
+
+        function releaseExam() {
+            if(!isJsonMode && document.getElementById('q_text').value.trim()) {
+                saveCurrent();
+            }
+            const subj = document.getElementById('subject_name').value.trim();
+            if(!subj) {
+                alert("Please enter a subject name / type of exam at the top.");
+                return;
+            }
+            if(questions.length === 0) {
+                alert("Add at least one question to release! You can use Manual or JSON import.");
+                return;
+            }
+            
+            fetch('/release_exam', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject: subj, questions: questions })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    document.getElementById('config-panel').style.display = 'none';
+                    document.getElementById('success-panel').style.display = 'block';
+                    document.getElementById('generated_code').innerText = data.exam_code;
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+        }
+        
+        function resetConfig() {
+            questions = [];
+            currentIndex = -1;
+            document.getElementById('subject_name').value = '';
+            document.getElementById('json_input').value = '';
+            document.getElementById('config-panel').style.display = 'block';
+            document.getElementById('success-panel').style.display = 'none';
+            if(isJsonMode) toggleJSON(); 
+            renderForm();
+        }
+        
+        window.onload = function() { renderForm(); };
+    </script>
+</head>
+<body>
+    <nav class="navbar glass-nav">
+        <div class="nav-brand">Exam Configurator Node</div>
+        <div style="display: flex; gap: 10px;">
+            <button id="toggle_btn" class="btn outline-btn" style="color: #a78bfa; border-color: #a78bfa;" onclick="toggleJSON()">JSON Type Question</button>
+            <a href="/admin" class="btn outline-btn">Back to Home</a>
+            <a href="/logout" class="btn outline-btn">Logout</a>
+        </div>
+    </nav>
+    <div class="glass-panel main-container slide-up" id="config-panel" style="max-width: 700px;">
+        <h2>Exam Question Paper Maker</h2>
+        
+        <div class="input-group">
+            <label>Subject Name / Type of Exam</label>
+            <input type="text" id="subject_name" placeholder="e.g., Blockchain Midterm 2026">
+        </div>
+        
+        <!-- JSON IMPORT MODE -->
+        <div id="json-mode" style="display: none; margin-bottom: 2rem;">
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Paste an Array of JSON objects here:</p>
+            <pre style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px; font-size: 0.8rem; overflow-x: auto; color: #a78bfa; margin-top: 0;">[
+  {
+    "q_text": "Sample Question Text?",
+    "opt_a": "A", "opt_b": "B", "opt_c": "C", "opt_d": "D",
+    "correct_opt": "Option A"
+  }
+]</pre>
+            <textarea id="json_input" style="width: 100%; height: 200px; background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 1rem; box-sizing: border-box; font-family: monospace; resize: vertical;" placeholder="Enter the JSON text here..."></textarea>
+            <button class="btn primary-btn" style="width: 100%; margin-top: 1rem; background: var(--success);" onclick="releaseExamFromJSON()">Save JSON Format & Generate Code</button>
+        </div>
+
+        <!-- MANUAL ENTRY DASHBOARD -->
+        <div id="manual-mode">
+            <h3 id="q_num" style="color: var(--primary); margin-bottom: 1rem; margin-top: 0;">Question 1</h3>
+            
+            <div class="input-group">
+                <label>Question Form</label>
+                <input type="text" id="q_text" placeholder="Enter your question here">
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <div class="input-group" style="flex: 1;">
+                    <label>Option A</label>
+                    <input type="text" id="opt_a">
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>Option B</label>
+                    <input type="text" id="opt_b">
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <div class="input-group" style="flex: 1;">
+                    <label>Option C</label>
+                    <input type="text" id="opt_c">
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>Option D</label>
+                    <input type="text" id="opt_d">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Select Exact Correct Option</label>
+                <select id="correct_opt">
+                    <option value="Option A">Option A</option>
+                    <option value="Option B">Option B</option>
+                    <option value="Option C">Option C</option>
+                    <option value="Option D">Option D</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.5rem;">
+                <button class="btn outline-btn" onclick="prevQ()">← Prev Question</button>
+                <button class="btn outline-btn" style="color: #ef4444; border-color:#ef4444;" onclick="deleteQ()">Delete Current</button>
+                <button class="btn primary-btn" style="flex: 1;" onclick="nextQ()">Save / Add Next →</button>
+            </div>
+        </div>
+        
+        <hr style="border: 1px solid var(--glass-border); margin: 2rem 0;">
+        <button class="btn primary-btn" style="width: 100%; background: var(--success);" onclick="releaseExam()">
+            Release Exam and Get Code
+        </button>
+    </div>
+
+    <!-- Success Output View -->
+    <div class="glass-panel main-container fade-in" id="success-panel" style="display: none; text-align: center;">
+        <h2 style="color: var(--success); font-size: 2rem; margin-bottom: 0.5rem;">Exam Released!</h2>
+        <p class="subtitle">Secure code generated for Students to write the test</p>
+        <div style="background: rgba(0,0,0,0.5); padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+            <h1 style="letter-spacing: 5px; color: #a78bfa; margin: 0; font-size: 3rem;" id="generated_code">XXXXXX</h1>
+        </div>
+        <button class="btn primary-btn" style="margin-bottom: 1rem;" onclick="resetConfig()">+ Create Next Question Paper Process</button>
+        <a href="/admin" class="btn outline-btn" style="width: 100%; box-sizing: border-box;">Go Back to Admin Home</a>
+    </div>
+</body>
+</html>
